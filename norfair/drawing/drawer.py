@@ -293,9 +293,7 @@ class Drawer:
         """
         if beta is None:
             beta = 1 - alpha
-        return cv2.addWeighted(
-            src1=frame1, src2=frame2, alpha=alpha, beta=beta, gamma=gamma
-        )
+        return cv2.addWeighted(src1=frame1, src2=frame2, alpha=alpha, beta=beta, gamma=gamma)
 
 
 class Drawable:
@@ -358,6 +356,4 @@ class Drawable:
             self.scores = scores
             self.live_points = live_points
         else:
-            raise ValueError(
-                f"Extecting a Detection or a TrackedObject but received {type(obj)}"
-            )
+            raise ValueError(f"Extecting a Detection or a TrackedObject but received {type(obj)}")

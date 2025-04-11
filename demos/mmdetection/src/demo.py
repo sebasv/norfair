@@ -1,6 +1,5 @@
 import argparse
 
-import numpy as np
 from mmdet.apis import inference_detector, init_detector
 from mmdet.core import get_classes
 
@@ -8,9 +7,7 @@ from norfair import Detection, Tracker, Video, draw_tracked_objects
 
 parser = argparse.ArgumentParser(description="Track human poses in a video.")
 parser.add_argument("files", type=str, nargs="+", help="Video files to process")
-parser.add_argument(
-    "--output-path", type=str, nargs="?", default=".", help="Output path"
-)
+parser.add_argument("--output-path", type=str, nargs="?", default=".", help="Output path")
 args = parser.parse_args()
 
 #
@@ -22,18 +19,11 @@ CHECKPOINT_FILE = "/mmdetection/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pt
 model = init_detector(CONFIG_FILE, CHECKPOINT_FILE, device="cuda:0")
 
 # Get the classes id mmdet uses
-VEHICLE_CLASSES = [
-    i
-    for i, n in enumerate(get_classes("coco"))
-    if n in ["car", "motorcycle", "bus", "truck"]
-]
+VEHICLE_CLASSES = [i for i, n in enumerate(get_classes("coco")) if n in ["car", "motorcycle", "bus", "truck"]]
 
 
 for input_path in args.files:
-
-    tracker = Tracker(
-        distance_function="euclidean", distance_threshold=20, detection_threshold=0.6
-    )
+    tracker = Tracker(distance_function="euclidean", distance_threshold=20, detection_threshold=0.6)
 
     video = Video(input_path=input_path, output_path=args.output_path)
 

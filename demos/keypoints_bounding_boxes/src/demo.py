@@ -2,7 +2,6 @@ import argparse
 import sys
 from typing import List, Optional, Union
 
-import cv2
 import numpy as np
 import torch
 
@@ -11,9 +10,7 @@ from norfair import Detection, Tracker, Video
 from norfair.drawing import Color
 
 # Import openpose
-openpose_install_path = (
-    "/openpose"  # Insert the path to your openpose instalation folder here
-)
+openpose_install_path = "/openpose"  # Insert the path to your openpose instalation folder here
 try:
     sys.path.append(openpose_install_path + "/build/python")
     from openpose import pyopenpose as op
@@ -31,6 +28,7 @@ INITIALIZATION_DELAY = 4
 POINTWISE_HIT_COUNTER_MAX = 10
 
 ############### OPENPOSE ##################
+
 
 # Wrapper implementation for OpenPose detector
 class OpenposeDetector:
@@ -72,9 +70,7 @@ class OpenposeDetector:
 class YOLO:
     def __init__(self, model_name: str, device: Optional[str] = None):
         if device is not None and "cuda" in device and not torch.cuda.is_available():
-            raise Exception(
-                "Selected device='cuda', but cuda is not available to Pytorch."
-            )
+            raise Exception("Selected device='cuda', but cuda is not available to Pytorch.")
         # automatically set device if its None
         elif device is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -89,7 +85,6 @@ class YOLO:
         image_size: int = 720,
         classes: Optional[List[int]] = None,
     ) -> torch.tensor:
-
         self.model.conf = conf_threshold
         self.model.iou = iou_threshold
         if classes is not None:
@@ -126,12 +121,8 @@ def yolo_detections_to_norfair_detections(
 def keypoints_distance(detected_pose, tracked_pose):
     # Use different distances for bounding boxes and keypoints
     if detected_pose.label != 0:
-        detection_centroid = np.sum(detected_pose.points, axis=0) / len(
-            detected_pose.points
-        )
-        tracked_centroid = np.sum(tracked_pose.estimate, axis=0) / len(
-            detected_pose.points
-        )
+        detection_centroid = np.sum(detected_pose.points, axis=0) / len(detected_pose.points)
+        tracked_centroid = np.sum(tracked_pose.estimate, axis=0) / len(detected_pose.points)
         distances = np.linalg.norm(detection_centroid - tracked_centroid, axis=0)
         return distances / (KEYPOINT_DIST_THRESHOLD + distances)
 
@@ -146,16 +137,11 @@ def keypoints_distance(detected_pose, tracked_pose):
 
 
 if __name__ == "__main__":
-
     # CLI configuration
     parser = argparse.ArgumentParser(description="Track objects in a video.")
     parser.add_argument("files", type=str, nargs="+", help="Video files to process")
-    parser.add_argument(
-        "--model-name", type=str, default="yolov5m6", help="YOLOv5 model name"
-    )
-    parser.add_argument(
-        "--img-size", type=int, default="720", help="YOLOv5 inference size (pixels)"
-    )
+    parser.add_argument("--model-name", type=str, default="yolov5m6", help="YOLOv5 model name")
+    parser.add_argument("--img-size", type=int, default="720", help="YOLOv5 inference size (pixels)")
     parser.add_argument(
         "--conf-threshold",
         type=float,
@@ -174,9 +160,7 @@ if __name__ == "__main__":
         type=int,
         help="Filter by class: --classes 0, or --classes 0 2 3",
     )
-    parser.add_argument(
-        "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
-    )
+    parser.add_argument("--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'")
     args = parser.parse_args()
 
     # Process Videos
@@ -208,9 +192,7 @@ if __name__ == "__main__":
                     if not detected_poses.any()
                     else [
                         Detection(p, scores=s, label=-1)
-                        for (p, s) in zip(
-                            detected_poses[:, :, :2], detected_poses[:, :, 2]
-                        )
+                        for (p, s) in zip(detected_poses[:, :, :2], detected_poses[:, :, 2], strict=False)
                     ]
                 )
             else:

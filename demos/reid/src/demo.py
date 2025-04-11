@@ -1,7 +1,5 @@
 import random
 
-random.seed(1337)
-
 import cv2
 import numpy as np
 import typer
@@ -10,6 +8,8 @@ from video_generator import generate_video
 
 from norfair import Tracker, Video, draw_points, draw_tracked_objects, get_cutout
 from norfair.filter import OptimizedKalmanFilterFactory
+
+random.seed(1337)
 
 
 def embedding_distance(matched_not_init_trackers, unmatched_trackers):
@@ -27,9 +27,7 @@ def embedding_distance(matched_not_init_trackers, unmatched_trackers):
         if detection_fst.embedding is None:
             continue
 
-        distance = 1 - cv2.compareHist(
-            snd_embedding, detection_fst.embedding, cv2.HISTCMP_CORREL
-        )
+        distance = 1 - cv2.compareHist(snd_embedding, detection_fst.embedding, cv2.HISTCMP_CORREL)
         if distance < 0.5:
             return distance
     return 1
@@ -91,9 +89,7 @@ def main(
             dtype=cv2_frame.dtype,
         )
         frame_with_border *= 254
-        frame_with_border[
-            border_size:-border_size, border_size:-border_size
-        ] = cv2_frame
+        frame_with_border[border_size:-border_size, border_size:-border_size] = cv2_frame
         video.write(frame_with_border)
 
 

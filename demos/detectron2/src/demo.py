@@ -1,7 +1,6 @@
 import argparse
 
 import cv2
-import numpy as np
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultPredictor
 
@@ -30,6 +29,7 @@ for frame in video:
         for p, c in zip(
             detections["instances"].pred_boxes.get_centers().cpu().numpy(),
             detections["instances"].pred_classes,
+            strict=False,
         )
         # Restrict to cars only
         # if c == 2

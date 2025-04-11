@@ -64,9 +64,7 @@ class Paths:
         self.mask = None
         self.attenuation_factor = 1 - attenuation
 
-    def draw(
-        self, frame: np.ndarray, tracked_objects: Sequence[TrackedObject]
-    ) -> np.array:
+    def draw(self, frame: np.ndarray, tracked_objects: Sequence[TrackedObject]) -> np.array:
         """
         Draw the paths of the points interest on a frame.
 
@@ -169,7 +167,6 @@ class AbsolutePaths:
         radius: Optional[int] = None,
         max_history=20,
     ):
-
         if get_points_to_draw is None:
 
             def get_points_to_draw(points):

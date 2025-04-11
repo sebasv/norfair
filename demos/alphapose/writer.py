@@ -1,5 +1,4 @@
 import os
-import time
 from queue import Queue
 from threading import Thread
 
@@ -65,9 +64,7 @@ class DataWriter:
         if opt.pose_flow:
             from trackers.PoseFlow.poseflow_infer import PoseFlowWrapper
 
-            self.pose_flow_wrapper = PoseFlowWrapper(
-                save_path=os.path.join(opt.outputpath, "poseflow")
-            )
+            self.pose_flow_wrapper = PoseFlowWrapper(save_path=os.path.join(opt.outputpath, "poseflow"))
 
         if self.opt.save_img or self.save_video or self.opt.vis:
             loss_type = self.cfg.DATA_PRESET.get("LOSS_TYPE", "MSELoss")
@@ -81,13 +78,9 @@ class DataWriter:
                     hand_face_num = 42
                 else:
                     hand_face_num = 110
-                self.vis_thres = [0.4] * (num_joints - hand_face_num) + [
-                    0.05
-                ] * hand_face_num
+                self.vis_thres = [0.4] * (num_joints - hand_face_num) + [0.05] * hand_face_num
 
-        self.use_heatmap_loss = (
-            self.cfg.DATA_PRESET.get("LOSS_TYPE", "MSELoss") == "MSELoss"
-        )
+        self.use_heatmap_loss = self.cfg.DATA_PRESET.get("LOSS_TYPE", "MSELoss") == "MSELoss"
 
         self.tracker = norfair.Tracker(
             distance_function=keypoints_distance,
@@ -115,26 +108,14 @@ class DataWriter:
         hm_size = self.cfg.DATA_PRESET.HEATMAP_SIZE
         if self.save_video:
             # initialize the file video stream, adapt ouput video resolution to original video
-            stream = cv2.VideoWriter(
-                *[
-                    self.video_save_opt[k]
-                    for k in ["savepath", "fourcc", "fps", "frameSize"]
-                ]
-            )
+            stream = cv2.VideoWriter(*[self.video_save_opt[k] for k in ["savepath", "fourcc", "fps", "frameSize"]])
             if not stream.isOpened():
                 print("Try to use other video encoders...")
                 ext = self.video_save_opt["savepath"].split(".")[-1]
                 fourcc, _ext = self.recognize_video_ext(ext)
                 self.video_save_opt["fourcc"] = fourcc
-                self.video_save_opt["savepath"] = (
-                    self.video_save_opt["savepath"][:-4] + _ext
-                )
-                stream = cv2.VideoWriter(
-                    *[
-                        self.video_save_opt[k]
-                        for k in ["savepath", "fourcc", "fps", "frameSize"]
-                    ]
-                )
+                self.video_save_opt["savepath"] = self.video_save_opt["savepath"][:-4] + _ext
+                stream = cv2.VideoWriter(*[self.video_save_opt[k] for k in ["savepath", "fourcc", "fps", "frameSize"]])
             assert stream.isOpened(), "Cannot open video for writing"
         # keep looping infinitelyd
         while True:
@@ -164,9 +145,7 @@ class DataWriter:
             orig_img = np.array(orig_img, dtype=np.uint8)[:, :, ::-1]
             if boxes is None or len(boxes) == 0:
                 if self.opt.save_img or self.save_video or self.opt.vis:
-                    self.write_image(
-                        orig_img, im_name, stream=stream if self.save_video else None
-                    )
+                    self.write_image(orig_img, im_name, stream=stream if self.save_video else None)
             else:
                 # location prediction (n, kp, 2) | score prediction (n, kp, 1)
                 assert hm_data.dim() == 4
@@ -206,12 +185,8 @@ class DataWriter:
                             hm_shape=hm_size,
                             norm_type=norm_type,
                         )
-                        pose_coord = np.concatenate(
-                            (pose_coords_body_foot, pose_coords_face_hand), axis=0
-                        )
-                        pose_score = np.concatenate(
-                            (pose_scores_body_foot, pose_scores_face_hand), axis=0
-                        )
+                        pose_coord = np.concatenate((pose_coords_body_foot, pose_coords_face_hand), axis=0)
+                        pose_score = np.concatenate((pose_scores_body_foot, pose_scores_face_hand), axis=0)
                     else:
                         pose_coord, pose_score = self.heatmap_to_coord(
                             hm_data[i][self.eval_joints],
@@ -240,9 +215,7 @@ class DataWriter:
                         {
                             "keypoints": preds_img[k],
                             "kp_score": preds_scores[k],
-                            "proposal_score": torch.mean(preds_scores[k])
-                            + scores[k]
-                            + 1.25 * max(preds_scores[k]),
+                            "proposal_score": torch.mean(preds_scores[k]) + scores[k] + 1.25 * max(preds_scores[k]),
                             "idx": ids[k],
                             "box": [
                                 boxes[k][0],
@@ -276,15 +249,13 @@ class DataWriter:
                     norfair.draw_tracked_objects(img, tracked_objects)
 
                     if hm_data.size()[1] == 49:
-                        from alphapose.utils.vis import vis_frame_dense as vis_frame
+                        pass
                     elif self.opt.vis_fast:
-                        from alphapose.utils.vis import vis_frame_fast as vis_frame
+                        pass
                     else:
-                        from alphapose.utils.vis import vis_frame
+                        pass
 
-                    self.write_image(
-                        img, im_name, stream=stream if self.save_video else None
-                    )
+                    self.write_image(img, im_name, stream=stream if self.save_video else None)
 
     def write_image(self, img, im_name, stream=None):
         if self.opt.vis:

@@ -16,28 +16,18 @@ parser.add_argument(
     default="Shoe",
     help="model name ('Shoe', 'Chair', 'Cup', 'Camera')",
 )
-parser.add_argument(
-    "--max-objects", type=int, default="2", help="Maximum number of objects at a time"
-)
+parser.add_argument("--max-objects", type=int, default="2", help="Maximum number of objects at a time")
 parser.add_argument(
     "--hit-counter-max",
     type=int,
     default="40",
     help="Maximum value that hit counters may take",
 )
-parser.add_argument(
-    "--initialization-delay", type=int, default="10", help="Initialization delay"
-)
-parser.add_argument(
-    "--conf-threshold", type=float, default="0.1", help="Detector threshold"
-)
-parser.add_argument(
-    "--distance-threshold", type=float, default="0.5", help="Distance threshold"
-)
+parser.add_argument("--initialization-delay", type=int, default="10", help="Initialization delay")
+parser.add_argument("--conf-threshold", type=float, default="0.1", help="Detector threshold")
+parser.add_argument("--distance-threshold", type=float, default="0.5", help="Distance threshold")
 parser.add_argument("--output-path", type=str, default=".", help="Output path")
-parser.add_argument(
-    "--draw-paths", action="store_true", help="Draw path of the centroid"
-)
+parser.add_argument("--draw-paths", action="store_true", help="Draw path of the centroid")
 parser.add_argument(
     "--draw-unalive",
     dest="draw_only_alive",
@@ -54,7 +44,6 @@ with mp_objectron.Objectron(
     min_detection_confidence=args.conf_threshold,
     model_name=args.model_name,
 ) as objectron:
-
     for input_path in args.files:
         video = Video(input_path=input_path, output_path=args.output_path)
 
@@ -72,7 +61,7 @@ with mp_objectron.Objectron(
 
                 if args.draw_paths:
                     # initialize path drawer
-                    def get_points_to_draw(points3d):
+                    def get_points_to_draw(points3d, projecter=projecter):
                         return [projecter.eye_2_pixel(points3d)[0].astype(int)]
 
                     path_drawer = Paths(get_points_to_draw)
@@ -83,9 +72,7 @@ with mp_objectron.Objectron(
             detections = []
             try:
                 for detected_object in results.detected_objects:
-                    points = np.array(
-                        [[p.x, p.y, p.z] for p in detected_object.landmarks_3d.landmark]
-                    )
+                    points = np.array([[p.x, p.y, p.z] for p in detected_object.landmarks_3d.landmark])
                     detections.append(Detection(points=points))
             except TypeError:
                 pass

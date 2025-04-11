@@ -96,19 +96,13 @@ def draw_points(
     # handle deprecated parameters
     #
     if color_by_label is not None:
-        warn_once(
-            'Parameter "color_by_label" on function draw_points is deprecated, set `color="by_label"` instead'
-        )
+        warn_once('Parameter "color_by_label" on function draw_points is deprecated, set `color="by_label"` instead')
         color = "by_label"
     if detections is not None:
-        warn_once(
-            "Parameter 'detections' on function draw_points is deprecated, use 'drawables' instead"
-        )
+        warn_once("Parameter 'detections' on function draw_points is deprecated, use 'drawables' instead")
         drawables = detections
     if label_size is not None:
-        warn_once(
-            "Parameter 'label_size' on function draw_points is deprecated, use 'text_size' instead"
-        )
+        warn_once("Parameter 'label_size' on function draw_points is deprecated, use 'text_size' instead")
         text_size = label_size
     # end
 
@@ -149,7 +143,7 @@ def draw_points(
             obj_text_color = text_color
 
         if draw_points:
-            for point, live in zip(d.points, d.live_points):
+            for point, live in zip(d.points, d.live_points, strict=False):
                 if live or not hide_dead_points:
                     Drawer.circle(
                         frame,
@@ -162,9 +156,7 @@ def draw_points(
         if draw_labels or draw_ids or draw_scores:
             position = d.points[d.live_points].mean(axis=0)
             position -= radius
-            text = _build_text(
-                d, draw_labels=draw_labels, draw_ids=draw_ids, draw_scores=draw_scores
-            )
+            text = _build_text(d, draw_labels=draw_labels, draw_ids=draw_ids, draw_scores=draw_scores)
 
             Drawer.text(
                 frame,

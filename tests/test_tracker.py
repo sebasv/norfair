@@ -39,9 +39,7 @@ def test_params():
         )
 
 
-@pytest.mark.parametrize(
-    "filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()]
-)
+@pytest.mark.parametrize("filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()])
 def test_simple(filter_factory):
     for delay in [0, 1, 3]:
         for counter_max in [delay + 1, delay + 3]:
@@ -59,7 +57,7 @@ def test_simple(filter_factory):
             detections = [Detection(points=np.array([[1, 1]]))]
 
             # test the delay
-            for age in range(delay):
+            for _ in range(delay):
                 assert len(tracker.update(detections)) == 0
 
             # build up hit_counter from delay+1 to counter_max
@@ -67,9 +65,7 @@ def test_simple(filter_factory):
                 tracked_objects = tracker.update(detections)
                 assert len(tracked_objects) == 1
                 obj = tracked_objects[0]
-                np.testing.assert_almost_equal(
-                    tracked_objects[0].estimate, np.array([[1, 1]])
-                )
+                np.testing.assert_almost_equal(tracked_objects[0].estimate, np.array([[1, 1]]))
                 assert obj.age == age
                 assert obj.hit_counter == age + 1
 
@@ -78,9 +74,7 @@ def test_simple(filter_factory):
                 tracked_objects = tracker.update(detections)
                 assert len(tracked_objects) == 1
                 obj = tracked_objects[0]
-                np.testing.assert_almost_equal(
-                    tracked_objects[0].estimate, np.array([[1, 1]])
-                )
+                np.testing.assert_almost_equal(tracked_objects[0].estimate, np.array([[1, 1]]))
                 assert obj.age == age
                 assert obj.hit_counter == counter_max
 
@@ -90,9 +84,7 @@ def test_simple(filter_factory):
                 tracked_objects = tracker.update()
                 assert len(tracked_objects) == 1
                 obj = tracked_objects[0]
-                np.testing.assert_almost_equal(
-                    tracked_objects[0].estimate, np.array([[1, 1]])
-                )
+                np.testing.assert_almost_equal(tracked_objects[0].estimate, np.array([[1, 1]]))
                 assert obj.age == age
                 assert obj.hit_counter == counter
 
@@ -100,9 +92,7 @@ def test_simple(filter_factory):
             assert len(tracker.update()) == 0
 
 
-@pytest.mark.parametrize(
-    "filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()]
-)
+@pytest.mark.parametrize("filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()])
 def test_moving(filter_factory):
     #
     # Test a simple case of a moving object
@@ -125,9 +115,7 @@ def test_moving(filter_factory):
     assert 3 < tracked_objects[0].estimate[0][1] <= 4
 
 
-@pytest.mark.parametrize(
-    "filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()]
-)
+@pytest.mark.parametrize("filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()])
 def test_distance_t(filter_factory):
     #
     # Test a moving object with a small distance threshold
@@ -153,9 +141,7 @@ def test_distance_t(filter_factory):
     assert 4 < tracked_objects[0].estimate[0][1] <= 4.5
 
 
-@pytest.mark.parametrize(
-    "filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()]
-)
+@pytest.mark.parametrize("filter_factory", [FilterPyKalmanFilterFactory(), OptimizedKalmanFilterFactory()])
 def test_1d_points(filter_factory, mock_coordinate_transformation):
     #
     # Test a detection with rank 1
@@ -193,25 +179,17 @@ def test_camera_motion(mock_coordinate_transformation):
         )
 
         detection = Detection(relative_points)
-        tracked_objects = tracker.update(
-            [detection], coord_transformations=coord_transformation_mock
-        )
+        tracked_objects = tracker.update([detection], coord_transformations=coord_transformation_mock)
 
         # assert that the detection was correctly updated
-        np.testing.assert_equal(
-            detection.absolute_points, validate_points(absolute_points)
-        )
+        np.testing.assert_equal(detection.absolute_points, validate_points(absolute_points))
         np.testing.assert_equal(detection.points, validate_points(relative_points))
 
         # check the tracked_object
         assert len(tracked_objects) == 1
         obj = tracked_objects[0]
-        np.testing.assert_almost_equal(
-            obj.get_estimate(absolute=False), validate_points(relative_points)
-        )
-        np.testing.assert_almost_equal(
-            obj.get_estimate(absolute=True), validate_points(absolute_points)
-        )
+        np.testing.assert_almost_equal(obj.get_estimate(absolute=False), validate_points(relative_points))
+        np.testing.assert_almost_equal(obj.get_estimate(absolute=True), validate_points(absolute_points))
         np.testing.assert_almost_equal(obj.estimate, validate_points(relative_points))
 
 
@@ -327,7 +305,7 @@ def test_reid_hit_counter():
     # check that hit counters initialize correctly
     assert len(tracked_objects) == 1
     assert tracked_objects[0].hit_counter == 2
-    assert tracked_objects[0].reid_hit_counter == None
+    assert tracked_objects[0].reid_hit_counter is None
 
     # check that object is dead if it doesn't get matched to any detections
     obj_id = tracked_objects[0].id
@@ -340,7 +318,7 @@ def test_reid_hit_counter():
         tracked_objects = tracker.update([Detection(points=np.array([[2, 2]]))])
     assert len(tracked_objects) == 1
     assert tracked_objects[0].id == obj_id
-    assert tracked_objects[0].reid_hit_counter == None
+    assert tracked_objects[0].reid_hit_counter is None
     assert tracked_objects[0].hit_counter == hit_counter_max
 
     # check that previous object gets eliminated after hit_counter_max + reid_hit_counter_max + 1

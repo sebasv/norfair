@@ -94,10 +94,7 @@ def draw_absolute_grid(
 
     # filter points that are not visible
     visible_points = points_transformed[
-        (points_transformed <= np.array([w, h])).all(axis=1)
-        & (points_transformed >= 0).all(axis=1)
+        (points_transformed <= np.array([w, h])).all(axis=1) & (points_transformed >= 0).all(axis=1)
     ]
     for point in visible_points:
-        Drawer.cross(
-            frame, point.astype(int), radius=radius, thickness=thickness, color=color
-        )
+        Drawer.cross(frame, point.astype(int), radius=radius, thickness=thickness, color=color)

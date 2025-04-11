@@ -56,9 +56,7 @@ class FixedCamera:
         self._background = None
         self._attenuation_factor = 1 - attenuation
 
-    def adjust_frame(
-        self, frame: np.ndarray, coord_transformation: TranslationTransformation
-    ) -> np.ndarray:
+    def adjust_frame(self, frame: np.ndarray, coord_transformation: TranslationTransformation) -> np.ndarray:
         """
         Render scaled up frame.
 
@@ -82,26 +80,18 @@ class FixedCamera:
                 frame.shape[0],
             )  # OpenCV format is (width, height)
 
-            scaled_size = tuple(
-                (np.array(original_size) * np.array(self.scale)).round().astype(int)
-            )
+            scaled_size = tuple((np.array(original_size) * np.array(self.scale)).round().astype(int))
             self._background = np.zeros(
                 [scaled_size[1], scaled_size[0], frame.shape[-1]],
                 frame.dtype,
             )
         else:
-            self._background = (self._background * self._attenuation_factor).astype(
-                frame.dtype
-            )
+            self._background = (self._background * self._attenuation_factor).astype(frame.dtype)
 
         # top_left is the anchor coordinate from where we start drawing the fame on top of the background
         # aim to draw it in the center of the background but transformations will move this point
-        top_left = (
-            np.array(self._background.shape[:2]) // 2 - np.array(frame.shape[:2]) // 2
-        )
-        top_left = (
-            coord_transformation.rel_to_abs(top_left[::-1]).round().astype(int)[::-1]
-        )
+        top_left = np.array(self._background.shape[:2]) // 2 - np.array(frame.shape[:2]) // 2
+        top_left = coord_transformation.rel_to_abs(top_left[::-1]).round().astype(int)[::-1]
         # box of the background that will be updated and the limits of it
         background_y0, background_y1 = (top_left[0], top_left[0] + frame.shape[0])
         background_x0, background_x1 = (top_left[1], top_left[1] + frame.shape[1])
@@ -117,25 +107,19 @@ class FixedCamera:
             or background_y1 > background_size_y
             or background_x1 > background_size_x
         ):
-            warn_once(
-                "moving_camera_scale is not enough to cover the range of camera movement, frame will be cropped"
-            )
+            warn_once("moving_camera_scale is not enough to cover the range of camera movement, frame will be cropped")
             # crop left or top of the frame if necessary
             frame_y0 = max(-background_y0, 0)
             frame_x0 = max(-background_x0, 0)
             # crop right or bottom of the frame if necessary
-            frame_y1 = max(
-                min(background_size_y - background_y0, background_y1 - background_y0), 0
-            )
-            frame_x1 = max(
-                min(background_size_x - background_x0, background_x1 - background_x0), 0
-            )
+            frame_y1 = max(min(background_size_y - background_y0, background_y1 - background_y0), 0)
+            frame_x1 = max(min(background_size_x - background_x0, background_x1 - background_x0), 0)
             # handle cases where the limits of the background become negative which numpy will interpret incorrectly
             background_y0 = max(background_y0, 0)
             background_x0 = max(background_x0, 0)
             background_y1 = max(background_y1, 0)
             background_x1 = max(background_x1, 0)
-        self._background[
-            background_y0:background_y1, background_x0:background_x1, :
-        ] = frame[frame_y0:frame_y1, frame_x0:frame_x1, :]
+        self._background[background_y0:background_y1, background_x0:background_x1, :] = frame[
+            frame_y0:frame_y1, frame_x0:frame_x1, :
+        ]
         return self._background

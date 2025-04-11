@@ -33,7 +33,6 @@ def process_video(
     frame_skip_period=1,
     create_video=False,
 ):
-
     tracker_time_mean = 0
     detector_time_mean = 0
 
@@ -44,16 +43,13 @@ def process_video(
         total_frames += 1
 
         if frame_number % frame_skip_period == 0:
-
             start_frame_time = time.time()
             data = preprocesser(frame)
             cmap, paf = detector(data)
             detections = postprocesser(cmap, paf)
             detector_time = time.time()
 
-            tracked_objects = tracker.update(
-                detections=detections, period=frame_skip_period
-            )
+            tracked_objects = tracker.update(detections=detections, period=frame_skip_period)
             tracker_time = time.time()
 
             tracker_time_mean += tracker_time - detector_time
@@ -76,15 +72,10 @@ def process_video(
 
 
 if __name__ == "__main__":
-
     # Flags
-    parser = argparse.ArgumentParser(
-        description="profile various trackers and distance functions."
-    )
+    parser = argparse.ArgumentParser(description="profile various trackers and distance functions.")
     parser.add_argument("files", type=str, nargs="+", help="Video files to process")
-    parser.add_argument(
-        "--skip-frame", dest="skip_frame", type=int, default=1, help="Frame skip period"
-    )
+    parser.add_argument("--skip-frame", dest="skip_frame", type=int, default=1, help="Frame skip period")
     parser.add_argument(
         "--output-path",
         dest="output_path",
@@ -155,18 +146,14 @@ if __name__ == "__main__":
     elif args.filter_setup in ["none", "filterpy", "optimized"]:
         filter_setups = [args.filter_setup]
     else:
-        raise ValueError(
-            "'filter_setup' argument should be either 'none', 'filterpy' or 'optimized'"
-        )
+        raise ValueError("'filter_setup' argument should be either 'none', 'filterpy' or 'optimized'")
 
     if args.use_all_distances:
         distance_functions = ["keypoints_vote", "euclidean"]
     elif args.distance_function in ["keypoints_vote", "euclidean"]:
         distance_functions = [args.distance_function]
     else:
-        raise ValueError(
-            "'distance_function' argument should be either 'keypoints_vote' or 'euclidean'"
-        )
+        raise ValueError("'distance_function' argument should be either 'keypoints_vote' or 'euclidean'")
 
     profiling = {}
     for input_path in args.files:
@@ -202,9 +189,7 @@ if __name__ == "__main__":
 
                 model_trt = get_model(model_weights_path, model_height, model_width)
 
-                distance_function = get_distance_function(
-                    df, video.input_width, video.input_height
-                )
+                distance_function = get_distance_function(df, video.input_width, video.input_height)
                 tracker = Tracker(
                     distance_function=distance_function,
                     detection_threshold=DETECTION_THRESHOLD,

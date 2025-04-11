@@ -2,7 +2,7 @@
 
 ::: norfair.filter
     options:
-        members: 
+        members:
             # - FilterFactory
             - FilterPyKalmanFilterFactory
             # - NoFilter

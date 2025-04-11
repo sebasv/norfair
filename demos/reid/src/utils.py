@@ -31,15 +31,9 @@ def get_hist(image):
 
 
 def collision_detected(det_first: Detection, det_snd: Detection):
-
     fst_xmin, fst_ymin = det_first.points[0]
     fst_xmax, fst_ymax = det_first.points[-1]
     snd_xmin, snd_ymin = det_snd.points[0]
     snd_xmax, snd_ymax = det_snd.points[-1]
 
-    return (
-        fst_xmin < snd_xmax
-        and fst_xmax > snd_xmin
-        and fst_ymin < snd_ymax
-        and fst_ymax > snd_ymin
-    )
+    return fst_xmin < snd_xmax and fst_xmax > snd_xmin and fst_ymin < snd_ymax and fst_ymax > snd_ymin

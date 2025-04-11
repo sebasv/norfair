@@ -50,9 +50,7 @@ parser.add_argument(
     action="store_true",
     help="Generate a text file with your MOTChallenge metrics results",
 )
-parser.add_argument(
-    "--output-path", type=str, nargs="?", default=".", help="Output path"
-)
+parser.add_argument("--output-path", type=str, nargs="?", default=".", help="Output path")
 parser.add_argument(
     "--select-sequences",
     type=str,
@@ -74,9 +72,7 @@ if args.make_video:
 if args.select_sequences is None:
     sequences_paths = [f.path for f in os.scandir(args.dataset_path) if f.is_dir()]
 else:
-    sequences_paths = [
-        os.path.join(args.dataset_path, f) for f in args.select_sequences
-    ]
+    sequences_paths = [os.path.join(args.dataset_path, f) for f in args.select_sequences]
 
 accumulator = metrics.Accumulators()
 
@@ -85,9 +81,7 @@ for input_path in sequences_paths:
     seqinfo_path = os.path.join(input_path, "seqinfo.ini")
     info_file = metrics.InformationFile(file_path=seqinfo_path)
 
-    all_detections = metrics.DetectionFileParser(
-        input_path=input_path, information_file=info_file
-    )
+    all_detections = metrics.DetectionFileParser(input_path=input_path, information_file=info_file)
 
     if args.save_pred:
         predictions_text_file = metrics.PredictionsTextFile(
@@ -116,7 +110,7 @@ for input_path in sequences_paths:
     accumulator.create_accumulator(input_path=input_path, information_file=info_file)
 
     tracked_objects = []
-    for frame, detections in zip(video_file, all_detections):
+    for frame, detections in zip(video_file, all_detections, strict=False):
         mask = build_mask(frame, detections, tracked_objects)
         coord_transformations = motion_estimator.update(frame, mask)
 

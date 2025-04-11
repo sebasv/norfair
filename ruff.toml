@@ -1,0 +1,8 @@
+line-length = 120
+target-version = "py311"
+exclude = ["research/cultivate/obsolete", "research/plant_science_research"]
+fix = true
+
+[lint]
+select = ["E", "W", "F", "B", "Q", "I"]
+ignore = ["E501"]

@@ -22,48 +22,27 @@ from utils import (
 
 import norfair
 from norfair import Tracker, Video
-from norfair.distances import iou
 
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "source", type=str, help="Path to the input data"
-    )  # file/folder, 0 for webcam
-    parser.add_argument(
-        "--weights", nargs="+", type=str, default="yolopv2.pt", help="model.pt path(s)"
-    )
-    parser.add_argument(
-        "--img-size", type=int, default=640, help="inference size (pixels)"
-    )
-    parser.add_argument(
-        "--conf-thres", type=float, default=0.3, help="object confidence threshold"
-    )
-    parser.add_argument(
-        "--iou-thres", type=float, default=0.45, help="IOU threshold for NMS"
-    )
-    parser.add_argument(
-        "--device", default="0", help="cuda device, i.e. 0 or 0,1,2,3 or cpu"
-    )
-    parser.add_argument(
-        "--save-conf", action="store_true", help="save confidences in --save-txt labels"
-    )
+    parser.add_argument("source", type=str, help="Path to the input data")  # file/folder, 0 for webcam
+    parser.add_argument("--weights", nargs="+", type=str, default="yolopv2.pt", help="model.pt path(s)")
+    parser.add_argument("--img-size", type=int, default=640, help="inference size (pixels)")
+    parser.add_argument("--conf-thres", type=float, default=0.3, help="object confidence threshold")
+    parser.add_argument("--iou-thres", type=float, default=0.45, help="IOU threshold for NMS")
+    parser.add_argument("--device", default="0", help="cuda device, i.e. 0 or 0,1,2,3 or cpu")
+    parser.add_argument("--save-conf", action="store_true", help="save confidences in --save-txt labels")
     parser.add_argument("--save-txt", action="store_true", help="save results to *.txt")
-    parser.add_argument(
-        "--nosave", action="store_true", help="do not save images/videos"
-    )
+    parser.add_argument("--nosave", action="store_true", help="do not save images/videos")
     parser.add_argument(
         "--classes",
         nargs="+",
         type=int,
         help="filter by class: --class 0, or --class 0 2 3",
     )
-    parser.add_argument(
-        "--agnostic-nms", action="store_true", help="class-agnostic NMS"
-    )
-    parser.add_argument(
-        "--project", default="runs/detect", help="save results to project/name"
-    )
+    parser.add_argument("--agnostic-nms", action="store_true", help="class-agnostic NMS")
+    parser.add_argument("--project", default="runs/detect", help="save results to project/name")
     parser.add_argument("--name", default="exp", help="save results to project/name")
     parser.add_argument(
         "--exist-ok",
@@ -81,12 +60,8 @@ def detect():
         opt.save_txt,
         opt.img_size,
     )
-    save_dir = Path(
-        increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok)
-    )  # increment run
-    (save_dir / "labels" if save_txt else save_dir).mkdir(
-        parents=True, exist_ok=True
-    )  # make dir
+    save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+    (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Load model
     model = torch.jit.load(weights)
@@ -106,9 +81,7 @@ def detect():
 
     # Run inference
     if device != "cpu":
-        model(
-            torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters()))
-        )  # run once
+        model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
 
     video = Video(input_path=source)
@@ -166,9 +139,7 @@ if __name__ == "__main__":
     print(opt)
 
     if not os.path.exists(opt.weights):
-        os.system(
-            f"wget https://github.com/CAIC-AD/YOLOPv2/releases/download/V0.0.1/yolopv2.pt -O {opt.weights}"
-        )
+        os.system(f"wget https://github.com/CAIC-AD/YOLOPv2/releases/download/V0.0.1/yolopv2.pt -O {opt.weights}")
 
     with torch.no_grad():
         detect()

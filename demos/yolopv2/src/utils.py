@@ -1,6 +1,5 @@
 import glob
 import logging
-import os
 import re
 import time
 from pathlib import Path
@@ -45,9 +44,7 @@ def yolop_detections_to_norfair_detections(
 
 def driving_area_mask(seg=None):
     da_predict = seg[:, :, 12:372, :]
-    da_seg_mask = torch.nn.functional.interpolate(
-        da_predict, scale_factor=2, mode="bilinear"
-    )
+    da_seg_mask = torch.nn.functional.interpolate(da_predict, scale_factor=2, mode="bilinear")
     _, da_seg_mask = torch.max(da_seg_mask, 1)
     da_seg_mask = da_seg_mask.int().squeeze().cpu().numpy()
     return da_seg_mask
@@ -92,9 +89,7 @@ def letterbox(
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
 
-    img = cv2.copyMakeBorder(
-        img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
-    )  # add border
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
 
     return img, ratio, (dw, dh)
 
@@ -114,9 +109,7 @@ def increment_path(path, exist_ok=True, sep=""):
 
 def lane_line_mask(ll=None):
     ll_predict = ll[:, :, 12:372, :]
-    ll_seg_mask = torch.nn.functional.interpolate(
-        ll_predict, scale_factor=2, mode="bilinear"
-    )
+    ll_seg_mask = torch.nn.functional.interpolate(ll_predict, scale_factor=2, mode="bilinear")
     ll_seg_mask = torch.round(ll_seg_mask).squeeze(1)
     ll_seg_mask = ll_seg_mask.int().squeeze().cpu().numpy()
     return ll_seg_mask
@@ -141,7 +134,7 @@ def non_max_suppression(
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Settings
-    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    max_wh = 4096  # (pixels) minimum and maximum box width and height
     max_det = 300  # maximum number of detections per image
     max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
     time_limit = 10.0  # seconds to quit after
@@ -156,11 +149,11 @@ def non_max_suppression(
 
         # Cat apriori labels if autolabelling
         if labels and len(labels[xi]):
-            l = labels[xi]
-            v = torch.zeros((len(l), nc + 5), device=x.device)
-            v[:, :4] = l[:, 1:5]  # box
+            label = labels[xi]
+            v = torch.zeros((len(label), nc + 5), device=x.device)
+            v[:, :4] = label[:, 1:5]  # box
             v[:, 4] = 1.0  # conf
-            v[range(len(l)), l[:, 0].long() + 5] = 1.0  # cls
+            v[range(len(label)), label[:, 0].long() + 5] = 1.0  # cls
             x = torch.cat((x, v), 0)
 
         # If none remain process next image
@@ -202,9 +195,7 @@ def non_max_suppression(
             # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
             weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(
-                1, keepdim=True
-            )  # merged boxes
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
             if redundant:
                 i = i[iou.sum(1) > 1]  # require redundancy
 
@@ -219,12 +210,8 @@ def non_max_suppression(
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
     # Rescale coords (xyxy) from img1_shape to img0_shape
     if ratio_pad is None:  # calculate from img0_shape
-        gain = min(
-            img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1]
-        )  # gain  = old / new
-        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (
-            img1_shape[0] - img0_shape[0] * gain
-        ) / 2  # wh padding
+        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
     else:
         gain = ratio_pad[0][0]
         pad = ratio_pad[1]
@@ -282,17 +269,8 @@ def box_iou(box1, box2):
     area2 = box_area(box2.T)
 
     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (
-        (
-            torch.min(box1[:, None, 2:], box2[:, 2:])
-            - torch.max(box1[:, None, :2], box2[:, :2])
-        )
-        .clamp(0)
-        .prod(2)
-    )
-    return inter / (
-        area1[:, None] + area2 - inter
-    )  # iou = inter / (area1 + area2 - inter)
+    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
+    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
 def show_seg_result(img, result, palette=None, is_demo=False):
@@ -311,9 +289,7 @@ def show_seg_result(img, result, palette=None, is_demo=False):
         for label, color in enumerate(palette):
             color_seg[result == label, :] = color
     else:
-        color_area = np.zeros(
-            (result[0].shape[0], result[0].shape[1], 3), dtype=np.uint8
-        )
+        color_area = np.zeros((result[0].shape[0], result[0].shape[1], 3), dtype=np.uint8)
 
         color_area[result[0] == 1] = [0, 255, 0]
         color_area[result[1] == 1] = [255, 0, 0]

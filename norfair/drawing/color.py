@@ -1,5 +1,5 @@
 import re
-from typing import Any, Hashable, Iterable, Tuple, Union
+from typing import Hashable, Iterable, Tuple, Union
 
 # types
 
@@ -342,9 +342,7 @@ class Palette:
             try:
                 cls._colors = PALETTES[palette]
             except KeyError as e:
-                raise ValueError(
-                    f"Invalid palette name '{palette}', valid values are {PALETTES.keys()}"
-                ) from e
+                raise ValueError(f"Invalid palette name '{palette}', valid values are {PALETTES.keys()}") from e
         else:
             colors = []
             for c in palette:

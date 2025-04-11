@@ -13,7 +13,6 @@ from trt_pose.parse_objects import ParseObjects
 
 from norfair import Detection
 from norfair.distances import (
-    create_keypoints_voting_distance,
     create_normalized_mean_euclidean_distance,
 )
 from norfair.filter import (
@@ -45,9 +44,7 @@ def get_preprocesser(model_width, model_height):
     def preprocess(image):
         global device
         device = torch.device("cuda")
-        image = cv2.cvtColor(
-            cv2.resize(image, (model_width, model_height)), cv2.COLOR_BGR2RGB
-        )
+        image = cv2.cvtColor(cv2.resize(image, (model_width, model_height)), cv2.COLOR_BGR2RGB)
         image = PIL.Image.fromarray(image)
         image = transforms.functional.to_tensor(image).to(device)
         image.sub_(mean[:, None, None]).div_(std[:, None, None])
@@ -102,15 +99,10 @@ def get_distance_function(distance_function, video_width=None, video_height=None
     elif distance_function == "euclidean":
         return create_normalized_mean_euclidean_distance(video_width, video_height)
     else:
-        raise ValueError(
-            "'distance_function' argument should be either 'keypoints_vote' or 'euclidean'"
-        )
+        raise ValueError("'distance_function' argument should be either 'keypoints_vote' or 'euclidean'")
 
 
-def get_model(
-    model_weights, model_height, model_width, optimize_model=None, pose_decriptor=None
-):
-
+def get_model(model_weights, model_height, model_width, optimize_model=None, pose_decriptor=None):
     if optimize_model is None:
         optimize_model = not model_weights.endswith("_trt.pth")
     if optimize_model:
@@ -126,17 +118,9 @@ def get_model(
         num_links = len(pose_decriptor["skeleton"])
 
         if "resnet18" in model_weights:
-            model = (
-                trt_pose.models.resnet18_baseline_att(num_parts, 2 * num_links)
-                .cuda()
-                .eval()
-            )
+            model = trt_pose.models.resnet18_baseline_att(num_parts, 2 * num_links).cuda().eval()
         elif "densenet121" in model_weights:
-            model = (
-                trt_pose.models.densenet121_baseline_att(num_parts, 2 * num_links)
-                .cuda()
-                .eval()
-            )
+            model = trt_pose.models.densenet121_baseline_att(num_parts, 2 * num_links).cuda().eval()
         else:
             raise ValueError("Model should be 'resnet18' or 'densenet121'")
 
@@ -148,9 +132,7 @@ def get_model(
         data = torch.zeros((1, 3, model_height, model_width)).cuda()
 
         # Next, we'll use torch2trt.  We'll enable fp16_mode to allow optimizations to use reduced half precision.
-        model_trt = torch2trt.torch2trt(
-            model, [data], fp16_mode=True, max_workspace_size=1 << 25
-        )
+        model_trt = torch2trt.torch2trt(model, [data], fp16_mode=True, max_workspace_size=1 << 25)
 
         # The optimized model may be saved so that we do not need to perform optimization again, we can just load the model.
         optimized_model_path = f"{weights_file_name}_trt.pth"
@@ -169,11 +151,7 @@ def rescaled_keypoints_vote(detected_pose, tracked_pose):
     distances = np.linalg.norm(detected_pose.points - tracked_pose.estimate, axis=1)
 
     match_num = np.count_nonzero(
-        (
-            distances
-            < KEYPOINT_DIST_SCALE_FACTOR
-            * np.linalg.norm(tracked_pose.estimate[11] - tracked_pose.estimate[15])
-        )
+        (distances < KEYPOINT_DIST_SCALE_FACTOR * np.linalg.norm(tracked_pose.estimate[11] - tracked_pose.estimate[15]))
         * (detected_pose.scores > DETECTION_THRESHOLD)
         * (tracked_pose.last_detection.scores > DETECTION_THRESHOLD)
     )
@@ -188,6 +166,4 @@ def get_filter_setup(filter_setup):
     elif filter_setup == "optimized":
         return OptimizedKalmanFilterFactory()
     else:
-        raise ValueError(
-            "'filter_setup' argument should be either 'none', 'filterpy' or 'optimized'"
-        )
+        raise ValueError("'filter_setup' argument should be either 'none', 'filterpy' or 'optimized'")

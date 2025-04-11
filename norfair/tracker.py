@@ -2,7 +2,6 @@ from logging import warning
 from typing import Any, Callable, Hashable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from rich import print
 
 from norfair.camera_motion import CoordinatesTransformation
 
@@ -86,14 +85,14 @@ class Tracker:
         initialization_delay: Optional[int] = None,
         pointwise_hit_counter_max: int = 4,
         detection_threshold: float = 0,
-        filter_factory: FilterFactory = OptimizedKalmanFilterFactory(),
+        filter_factory: FilterFactory | None = None,
         past_detections_length: int = 4,
-        reid_distance_function: Optional[
-            Callable[["TrackedObject", "TrackedObject"], float]
-        ] = None,
+        reid_distance_function: Optional[Callable[["TrackedObject", "TrackedObject"], float]] = None,
         reid_distance_threshold: float = 0,
         reid_hit_counter_max: Optional[int] = None,
     ):
+        if filter_factory is None:
+            filter_factory = OptimizedKalmanFilterFactory()
         self.tracked_objects: Sequence["TrackedObject"] = []
 
         if isinstance(distance_function, str):
@@ -184,9 +183,7 @@ class Tracker:
         alive_objects = []
         dead_objects = []
         if self.reid_hit_counter_max is None:
-            self.tracked_objects = [
-                o for o in self.tracked_objects if o.hit_counter_is_positive
-            ]
+            self.tracked_objects = [o for o in self.tracked_objects if o.hit_counter_is_positive]
             alive_objects = self.tracked_objects
         else:
             tracked_objects = []
@@ -277,11 +274,7 @@ class Tracker:
         List["TrackedObject"]
             The list of active objects
         """
-        return [
-            o
-            for o in self.tracked_objects
-            if not o.is_initializing and o.hit_counter_is_positive
-        ]
+        return [o for o in self.tracked_objects if not o.is_initializing and o.hit_counter_is_positive]
 
     def _update_objects_in_place(
         self,
@@ -301,26 +294,16 @@ class Tracker:
             # Used just for debugging distance function
             if distance_matrix.any():
                 for i, minimum in enumerate(distance_matrix.min(axis=0)):
-                    objects[i].current_min_distance = (
-                        minimum if minimum < distance_threshold else None
-                    )
+                    objects[i].current_min_distance = minimum if minimum < distance_threshold else None
 
-            matched_cand_indices, matched_obj_indices = self.match_dets_and_objs(
-                distance_matrix, distance_threshold
-            )
+            matched_cand_indices, matched_obj_indices = self.match_dets_and_objs(distance_matrix, distance_threshold)
             if len(matched_cand_indices) > 0:
-                unmatched_candidates = [
-                    d for i, d in enumerate(candidates) if i not in matched_cand_indices
-                ]
-                unmatched_objects = [
-                    d for i, d in enumerate(objects) if i not in matched_obj_indices
-                ]
+                unmatched_candidates = [d for i, d in enumerate(candidates) if i not in matched_cand_indices]
+                unmatched_objects = [d for i, d in enumerate(objects) if i not in matched_obj_indices]
                 matched_objects = []
 
                 # Handle matched people/detections
-                for (match_cand_idx, match_obj_idx) in zip(
-                    matched_cand_indices, matched_obj_indices
-                ):
+                for match_cand_idx, match_obj_idx in zip(matched_cand_indices, matched_obj_indices, strict=False):
                     match_distance = distance_matrix[match_cand_idx, match_obj_idx]
                     matched_candidate = candidates[match_cand_idx]
                     matched_object = objects[match_obj_idx]
@@ -513,12 +496,8 @@ class TrackedObject:
         if initial_detection.scores is None:
             self.detected_at_least_once_points = np.array([True] * self.num_points)
         else:
-            self.detected_at_least_once_points = (
-                initial_detection.scores > self.detection_threshold
-            )
-        self.point_hit_counter: np.ndarray = self.detected_at_least_once_points.astype(
-            int
-        )
+            self.detected_at_least_once_points = initial_detection.scores > self.detection_threshold
+        self.point_hit_counter: np.ndarray = self.detected_at_least_once_points.astype(int)
         initial_detection.age = self.age
         self.past_detections_length = past_detections_length
         if past_detections_length > 0:
@@ -599,9 +578,7 @@ class TrackedObject:
             if not absolute:
                 return positions
             else:
-                raise ValueError(
-                    "You must provide 'coord_transformations' to the tracker to get absolute coordinates"
-                )
+                raise ValueError("You must provide 'coord_transformations' to the tracker to get absolute coordinates")
         else:
             if absolute:
                 return positions
@@ -638,40 +615,30 @@ class TrackedObject:
         if detection.scores is not None:
             assert len(detection.scores.shape) == 1
             points_over_threshold_mask = detection.scores > self.detection_threshold
-            matched_sensors_mask = np.array(
-                [(m,) * self.dim_points for m in points_over_threshold_mask]
-            ).flatten()
-            H_pos = np.diag(matched_sensors_mask).astype(
-                float
-            )  # We measure x, y positions
+            matched_sensors_mask = np.array([(m,) * self.dim_points for m in points_over_threshold_mask]).flatten()
+            H_pos = np.diag(matched_sensors_mask).astype(float)  # We measure x, y positions
             self.point_hit_counter[points_over_threshold_mask] += 2 * period
         else:
             points_over_threshold_mask = np.array([True] * self.num_points)
             H_pos = np.identity(self.num_points * self.dim_points)
             self.point_hit_counter += 2 * period
-        self.point_hit_counter[
-            self.point_hit_counter >= self.pointwise_hit_counter_max
-        ] = self.pointwise_hit_counter_max
+        self.point_hit_counter[self.point_hit_counter >= self.pointwise_hit_counter_max] = (
+            self.pointwise_hit_counter_max
+        )
         self.point_hit_counter[self.point_hit_counter < 0] = 0
         H_vel = np.zeros(H_pos.shape)  # But we don't directly measure velocity
         H = np.hstack([H_pos, H_vel])
-        self.filter.update(
-            np.expand_dims(detection.absolute_points.flatten(), 0).T, None, H
-        )
+        self.filter.update(np.expand_dims(detection.absolute_points.flatten(), 0).T, None, H)
 
         detected_at_least_once_mask = np.array(
             [(m,) * self.dim_points for m in self.detected_at_least_once_points]
         ).flatten()
-        now_detected_mask = np.hstack(
-            (points_over_threshold_mask,) * self.dim_points
-        ).flatten()
-        first_detection_mask = np.logical_and(
-            now_detected_mask, np.logical_not(detected_at_least_once_mask)
-        )
+        now_detected_mask = np.hstack((points_over_threshold_mask,) * self.dim_points).flatten()
+        first_detection_mask = np.logical_and(now_detected_mask, np.logical_not(detected_at_least_once_mask))
 
-        self.filter.x[: self.dim_z][first_detection_mask] = np.expand_dims(
-            detection.absolute_points.flatten(), 0
-        ).T[first_detection_mask]
+        self.filter.x[: self.dim_z][first_detection_mask] = np.expand_dims(detection.absolute_points.flatten(), 0).T[
+            first_detection_mask
+        ]
 
         # Force points being detected for the first time to have velocity = 0
         # This is needed because some detectors (like OpenPose) set points with
@@ -722,17 +689,13 @@ class TrackedObject:
         self.last_distance = tracked_object.last_distance
         self.current_min_distance = tracked_object.current_min_distance
         self.last_detection = tracked_object.last_detection
-        self.detected_at_least_once_points = (
-            tracked_object.detected_at_least_once_points
-        )
+        self.detected_at_least_once_points = tracked_object.detected_at_least_once_points
         self.filter = tracked_object.filter
 
         for past_detection in tracked_object.past_detections:
             self._conditionally_add_to_past_detections(past_detection)
 
-    def update_coordinate_transformation(
-        self, coordinate_transformation: CoordinatesTransformation
-    ):
+    def update_coordinate_transformation(self, coordinate_transformation: CoordinatesTransformation):
         if coordinate_transformation is not None:
             self.abs_to_rel = coordinate_transformation.abs_to_rel
 
@@ -783,10 +746,6 @@ class Detection:
         self.embedding = embedding
         self.age = None
 
-    def update_coordinate_transformation(
-        self, coordinate_transformation: CoordinatesTransformation
-    ):
+    def update_coordinate_transformation(self, coordinate_transformation: CoordinatesTransformation):
         if coordinate_transformation is not None:
-            self.absolute_points = coordinate_transformation.rel_to_abs(
-                self.absolute_points
-            )
+            self.absolute_points = coordinate_transformation.rel_to_abs(self.absolute_points)

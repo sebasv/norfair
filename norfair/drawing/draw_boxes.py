@@ -97,14 +97,10 @@ def draw_boxes(
     # handle deprecated parameters
     #
     if random_color is not None:
-        warn_once(
-            'Parameter "random_color" is deprecated, set `color="random"` instead'
-        )
+        warn_once('Parameter "random_color" is deprecated, set `color="random"` instead')
         color = "random"
     if color_by_label is not None:
-        warn_once(
-            'Parameter "color_by_label" is deprecated, set `color="by_label"` instead'
-        )
+        warn_once('Parameter "color_by_label" is deprecated, set `color="by_label"` instead')
         color = "by_label"
     if detections is not None:
         warn_once('Parameter "detections" is deprecated, use "drawables" instead')
@@ -155,9 +151,7 @@ def draw_boxes(
                 thickness=thickness,
             )
 
-        text = _build_text(
-            d, draw_labels=draw_labels, draw_ids=draw_ids, draw_scores=draw_scores
-        )
+        text = _build_text(d, draw_labels=draw_labels, draw_ids=draw_ids, draw_scores=draw_scores)
         if text:
             if text_color is None:
                 obj_text_color = obj_color

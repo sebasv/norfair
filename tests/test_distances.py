@@ -186,9 +186,7 @@ def test_iou():
 
 
 def test_keypoint_vote(mock_obj, mock_det):
-    vote_d = create_keypoints_voting_distance(
-        keypoint_distance_threshold=np.sqrt(8), detection_threshold=0.5
-    )
+    vote_d = create_keypoints_voting_distance(keypoint_distance_threshold=np.sqrt(8), detection_threshold=0.5)
 
     # perfect match
     det = mock_det(points=[[0, 0], [1, 1], [2, 2]], scores=0.6)
@@ -283,7 +281,7 @@ def test_scalar_distance(mock_obj, mock_det):
 
     dist_matrix = fro.get_distances([obj], [det])
 
-    assert type(dist_matrix) == np.ndarray
+    assert isinstance(dist_matrix, np.ndarray)
     assert dist_matrix.shape == (1, 1)
     assert dist_matrix[0, 0] == 0
 
@@ -307,7 +305,7 @@ def test_vectorized_distance(mock_obj, mock_det):
 
     dist_matrix = fro.get_distances([obj], [det])
 
-    assert type(dist_matrix) == np.ndarray
+    assert isinstance(dist_matrix, np.ndarray)
     assert dist_matrix.shape == (1, 1)
     assert dist_matrix[0, 0] == 0
 
@@ -320,6 +318,6 @@ def test_scipy_distance(mock_obj, mock_det):
 
     dist_matrix = euc.get_distances([obj], [det])
 
-    assert type(dist_matrix) == np.ndarray
+    assert isinstance(dist_matrix, np.ndarray)
     assert dist_matrix.shape == (1, 1)
     assert dist_matrix[0, 0] == 1.0

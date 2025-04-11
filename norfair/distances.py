@@ -1,4 +1,5 @@
 """Predefined distances"""
+
 from abc import ABC, abstractmethod
 from functools import partial
 from logging import warning
@@ -155,9 +156,7 @@ class VectorizedDistance(Distance):
         candidate_labels = np.array([c.label for c in candidates]).astype(str)
 
         # iterate over labels that are present both in objects and detections
-        for label in np.intersect1d(
-            np.unique(object_labels), np.unique(candidate_labels)
-        ):
+        for label in np.intersect1d(np.unique(object_labels), np.unique(candidate_labels)):
             # generate masks of the subset of object and detections for this label
             obj_mask = object_labels == label
             cand_mask = candidate_labels == label
@@ -179,15 +178,11 @@ class VectorizedDistance(Distance):
 
             # calculate the pairwise distances between objects and candidates with this label
             # and assign the result to the correct positions inside distance_matrix
-            distance_matrix[np.ix_(cand_mask, obj_mask)] = self._compute_distance(
-                stacked_candidates, stacked_objects
-            )
+            distance_matrix[np.ix_(cand_mask, obj_mask)] = self._compute_distance(stacked_candidates, stacked_objects)
 
         return distance_matrix
 
-    def _compute_distance(
-        self, stacked_candidates: np.ndarray, stacked_objects: np.ndarray
-    ) -> np.ndarray:
+    def _compute_distance(self, stacked_candidates: np.ndarray, stacked_objects: np.ndarray) -> np.ndarray:
         """
         Method that computes the pairwise distances between new candidates and objects.
         It is intended to use the entire vectors to compare to each other in a single operation.
@@ -319,9 +314,7 @@ def mean_manhattan(detection: "Detection", tracked_object: "TrackedObject") -> f
     --------
     [`np.linalg.norm`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
     """
-    return np.linalg.norm(
-        detection.points - tracked_object.estimate, ord=1, axis=1
-    ).mean()
+    return np.linalg.norm(detection.points - tracked_object.estimate, ord=1, axis=1).mean()
 
 
 def _boxes_area(boxes: np.ndarray) -> np.ndarray:
@@ -336,9 +329,7 @@ def _validate_bboxes(bboxes: np.ndarray):
     Validate that bounding boxes are well formed.
     """
     assert (
-        isinstance(bboxes, np.ndarray)
-        and len(bboxes.shape) == 2
-        and bboxes.shape[1] == 4
+        isinstance(bboxes, np.ndarray) and len(bboxes.shape) == 2 and bboxes.shape[1] == 4
     ), f"Bounding boxes must be defined as np.array with (N, 4) shape, {bboxes} given"
 
     if not (all(bboxes[:, 0] < bboxes[:, 2]) and all(bboxes[:, 1] < bboxes[:, 3])):
@@ -373,12 +364,8 @@ def iou(candidates: np.ndarray, objects: np.ndarray) -> np.ndarray:
     top_left = np.maximum(candidates[:, None, :2], objects[:, :2])
     bottom_right = np.minimum(candidates[:, None, 2:], objects[:, 2:])
 
-    area_intersection = np.prod(
-        np.clip(bottom_right - top_left, a_min=0, a_max=None), 2
-    )
-    return 1 - area_intersection / (
-        area_candidates[:, None] + area_objects - area_intersection
-    )
+    area_intersection = np.prod(np.clip(bottom_right - top_left, a_min=0, a_max=None), 2)
+    return 1 - area_intersection / (area_candidates[:, None] + area_objects - area_intersection)
 
 
 iou_opt = iou  # deprecated
@@ -417,9 +404,7 @@ _SCIPY_DISTANCE_FUNCTIONS = [
     "sqeuclidean",
     "yule",
 ]
-AVAILABLE_VECTORIZED_DISTANCES = (
-    list(_VECTORIZED_DISTANCE_FUNCTIONS.keys()) + _SCIPY_DISTANCE_FUNCTIONS
-)
+AVAILABLE_VECTORIZED_DISTANCES = list(_VECTORIZED_DISTANCE_FUNCTIONS.keys()) + _SCIPY_DISTANCE_FUNCTIONS
 
 
 def get_distance_by_name(name: str) -> Distance:
@@ -488,9 +473,7 @@ def create_keypoints_voting_distance(
         The distance funtion that must be passed to the Tracker.
     """
 
-    def keypoints_voting_distance(
-        detection: "Detection", tracked_object: "TrackedObject"
-    ) -> float:
+    def keypoints_voting_distance(detection: "Detection", tracked_object: "TrackedObject") -> float:
         distances = np.linalg.norm(detection.points - tracked_object.estimate, axis=1)
         match_num = np.count_nonzero(
             (distances < keypoint_distance_threshold)
@@ -523,9 +506,7 @@ def create_normalized_mean_euclidean_distance(
         The distance funtion that must be passed to the Tracker.
     """
 
-    def normalized__mean_euclidean_distance(
-        detection: "Detection", tracked_object: "TrackedObject"
-    ) -> float:
+    def normalized__mean_euclidean_distance(detection: "Detection", tracked_object: "TrackedObject") -> float:
         """Normalized mean euclidean distance"""
         # calculate distances and normalized it by width and height
         difference = (detection.points - tracked_object.estimate).astype(float)

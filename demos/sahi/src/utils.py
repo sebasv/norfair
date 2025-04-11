@@ -18,9 +18,7 @@ def download_yolov5_model(model_url: str, destination_path: str):
 
 
 def obtain_detection_model(confidence_threshold: float):
-    device = (
-        f"cuda:{torch.cuda.current_device()}" if torch.cuda.is_available() else "cpu"
-    )
+    device = f"cuda:{torch.cuda.current_device()}" if torch.cuda.is_available() else "cpu"
     yolov5_model_path = "./models/yolov5x6.pt"
     download_yolov5_model(
         model_url="https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5x6.pt",
@@ -37,9 +35,7 @@ def obtain_detection_model(confidence_threshold: float):
 def create_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Track objects using sahi in a video.")
     parser.add_argument("file", type=str, help="Video files to process")
-    parser.add_argument(
-        "--output-path", type=str, default="output.mp4", help="Output video path"
-    )
+    parser.add_argument("--output-path", type=str, default="output.mp4", help="Output video path")
     parser.add_argument(
         "--distance-threshold",
         type=float,

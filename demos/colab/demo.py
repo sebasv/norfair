@@ -12,9 +12,7 @@ from norfair.distances import create_normalized_mean_euclidean_distance
 DISTANCE_THRESHOLD_CENTROID: float = 0.08
 
 
-def inference(
-    input_video: str, model: str, track_points: str, model_threshold: str, classes: List
-):
+def inference(input_video: str, model: str, track_points: str, model_threshold: str, classes: List):
     coord_transformations = None
     paths_drawer = None
     fix_paths = True
@@ -23,13 +21,9 @@ def inference(
 
     transformations_getter = HomographyTransformationGetter()
 
-    motion_estimator = MotionEstimator(
-        max_points=500, min_distance=7, transformations_getter=transformations_getter
-    )
+    motion_estimator = MotionEstimator(max_points=500, min_distance=7, transformations_getter=transformations_getter)
 
-    distance_function = create_normalized_mean_euclidean_distance(
-        video.input_height, video.input_width
-    )
+    distance_function = create_normalized_mean_euclidean_distance(video.input_height, video.input_width)
     distance_threshold = DISTANCE_THRESHOLD_CENTROID
 
     tracker = Tracker(
@@ -55,13 +49,9 @@ def inference(
 
         coord_transformations = motion_estimator.update(frame, mask)
 
-        detections = yolo_detections_to_norfair_detections(
-            yolo_detections, track_points=track_points
-        )
+        detections = yolo_detections_to_norfair_detections(yolo_detections, track_points=track_points)
 
-        tracked_objects = tracker.update(
-            detections=detections, coord_transformations=coord_transformations
-        )
+        tracked_objects = tracker.update(detections=detections, coord_transformations=coord_transformations)
 
         frame = draw(
             paths_drawer,
@@ -78,12 +68,8 @@ def inference(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Track objects in a video.")
     parser.add_argument("files", type=str, help="Video files to process")
-    parser.add_argument(
-        "--detector-path", type=str, default="yolov7.pt", help="YOLOv7 model path"
-    )
-    parser.add_argument(
-        "--img-size", type=int, default="720", help="YOLOv7 inference size (pixels)"
-    )
+    parser.add_argument("--detector-path", type=str, default="yolov7.pt", help="YOLOv7 model path")
+    parser.add_argument("--img-size", type=int, default="720", help="YOLOv7 inference size (pixels)")
     parser.add_argument(
         "--conf-threshold",
         type=float,
@@ -96,9 +82,7 @@ if __name__ == "__main__":
         type=int,
         help="Filter by class: --classes 0, or --classes 0 2 3",
     )
-    parser.add_argument(
-        "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
-    )
+    parser.add_argument("--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'")
     parser.add_argument(
         "--track-points",
         type=str,

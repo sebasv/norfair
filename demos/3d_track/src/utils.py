@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 
-from norfair import Palette
+from norfair import Detection, Palette
+from norfair.tracker import TrackedObject
 
 CONNECTED_INDEXES = [1, 2, 4, 3, 1, 5, 7, 3, 7, 8, 6, 5, 6, 2, 4, 8]
 
@@ -27,12 +28,8 @@ class PixelCoordinatesProjecter:
 
         self.image_size = np.array(image_size)
 
-        ndc_params_is_none = all(
-            elem is None for elem in (focal_length_ndc, principal_point_ndc)
-        )
-        pixel_params_is_none = all(
-            elem is None for elem in (focal_length_pixel, principal_point_pixel)
-        )
+        ndc_params_is_none = all(elem is None for elem in (focal_length_ndc, principal_point_ndc))
+        pixel_params_is_none = all(elem is None for elem in (focal_length_pixel, principal_point_pixel))
 
         if ndc_params_is_none and not pixel_params_is_none:
             self.focal_length_pixel = focal_length_pixel
@@ -49,9 +46,7 @@ class PixelCoordinatesProjecter:
             self.principal_point_ndc = np.array((0.0, 0.0))
             self.compute_pixel_parameters_from_ndc_parameters()
         else:
-            raise ValueError(
-                "You cannot provide parameters in both NDC and pixel coordinates. Choose one."
-            )
+            raise ValueError("You cannot provide parameters in both NDC and pixel coordinates. Choose one.")
 
     def compute_pixel_parameters_from_ndc_parameters(self):
         """
@@ -64,9 +59,7 @@ class PixelCoordinatesProjecter:
         py_pixel = (1-py_ndc)*image_height/2
         """
         self.focal_length_pixel = self.focal_length_ndc * self.image_size / 2
-        self.principal_point_pixel = (
-            (1 - self.principal_point_ndc) * self.image_size / 2
-        )
+        self.principal_point_pixel = (1 - self.principal_point_ndc) * self.image_size / 2
 
     def compute_ndc_parameters_from_pixel_parameters(self):
         """
@@ -79,9 +72,7 @@ class PixelCoordinatesProjecter:
         py_ndc = -py_pixel * 2.0 / image_height + 1.0
         """
         self.focal_length_ndc = 2 * self.focal_length_pixel / self.image_size
-        self.principal_point_ndc = (
-            1.0 - 2.0 * self.principal_point_pixel / self.image_size
-        )
+        self.principal_point_ndc = 1.0 - 2.0 * self.principal_point_pixel / self.image_size
 
     def eye_2_ndc(self, points_eye):
         """

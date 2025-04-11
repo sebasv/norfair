@@ -1,4 +1,5 @@
 """Script to deploy the latest version to github pages using mike"""
+
 import logging
 import subprocess
 from typing import List, Union

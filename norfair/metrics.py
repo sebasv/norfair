@@ -45,7 +45,6 @@ class PredictionsTextFile:
     """
 
     def __init__(self, input_path, save_path=".", information_file=None):
-
         file_name = os.path.split(input_path)[1]
 
         if information_file is None:
@@ -114,12 +113,8 @@ class DetectionFileParser:
         row_order = np.argsort(self.matrix_detections[:, 0])
         self.matrix_detections = self.matrix_detections[row_order]
         # Coordinates refer to box corners
-        self.matrix_detections[:, 4] = (
-            self.matrix_detections[:, 2] + self.matrix_detections[:, 4]
-        )
-        self.matrix_detections[:, 5] = (
-            self.matrix_detections[:, 3] + self.matrix_detections[:, 5]
-        )
+        self.matrix_detections[:, 4] = self.matrix_detections[:, 2] + self.matrix_detections[:, 4]
+        self.matrix_detections[:, 5] = self.matrix_detections[:, 3] + self.matrix_detections[:, 5]
 
         if information_file is None:
             seqinfo_path = os.path.join(input_path, "seqinfo.ini")
@@ -168,7 +163,7 @@ class Accumulators:
     def create_accumulator(self, input_path, information_file=None):
         # Check that motmetrics is installed here, so we don't have to process
         # the whole dataset before failing out if we don't.
-        mm.metrics
+        assert hasattr(mm, "metrics")
 
         file_name = os.path.split(input_path)[1]
 
@@ -183,9 +178,7 @@ class Accumulators:
             seqinfo_path = os.path.join(input_path, "seqinfo.ini")
             information_file = InformationFile(file_path=seqinfo_path)
         length = information_file.search(variable_name="seqLength")
-        self.progress_bar_iter = track(
-            range(length - 1), description=file_name, transient=False
-        )
+        self.progress_bar_iter = track(range(length - 1), description=file_name, transient=False)
 
     def update(self, predictions=None):
         # Get the tracked boxes from this frame in an array
@@ -301,9 +294,7 @@ def compare_dataframes(gts, ts):
     for k, tsacc in ts.items():
         print("Comparing ", k, "...")
         if k in gts:
-            accs.append(
-                mm.utils.compare_to_groundtruth(gts[k], tsacc, "iou", distth=0.5)
-            )
+            accs.append(mm.utils.compare_to_groundtruth(gts[k], tsacc, "iou", distth=0.5))
             names.append(k)
 
     return accs, names
@@ -314,19 +305,14 @@ def eval_motChallenge(matrixes_predictions, paths, metrics=None, generate_overal
         [
             (
                 os.path.split(p)[1],
-                mm.io.loadtxt(
-                    os.path.join(p, "gt/gt.txt"), fmt="mot15-2D", min_confidence=1
-                ),
+                mm.io.loadtxt(os.path.join(p, "gt/gt.txt"), fmt="mot15-2D", min_confidence=1),
             )
             for p in paths
         ]
     )
 
     ts = OrderedDict(
-        [
-            (os.path.split(paths[n])[1], load_motchallenge(matrixes_predictions[n]))
-            for n in range(len(paths))
-        ]
+        [(os.path.split(paths[n])[1], load_motchallenge(matrixes_predictions[n])) for n in range(len(paths))]
     )
 
     mh = mm.metrics.create()
@@ -337,9 +323,7 @@ def eval_motChallenge(matrixes_predictions, paths, metrics=None, generate_overal
         metrics = list(mm.metrics.motchallenge_metrics)
     mm.lap.default_solver = "scipy"
     print("Computing metrics...")
-    summary_dataframe = mh.compute_many(
-        accs, names=names, metrics=metrics, generate_overall=generate_overall
-    )
+    summary_dataframe = mh.compute_many(accs, names=names, metrics=metrics, generate_overall=generate_overall)
     summary_text = mm.io.render_summary(
         summary_dataframe,
         formatters=mh.formatters,

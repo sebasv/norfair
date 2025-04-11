@@ -1,16 +1,12 @@
 import argparse
 import sys
 
-import numpy as np
-
 import norfair
 from norfair import Detection, Tracker, Video
 from norfair.distances import create_keypoints_voting_distance
 
 # Import openpose
-openpose_install_path = (
-    "/openpose"  # Insert the path to your openpose instalation folder here
-)
+openpose_install_path = "/openpose"  # Insert the path to your openpose instalation folder here
 try:
     sys.path.append(openpose_install_path + "/build/python")
     from openpose import pyopenpose as op
@@ -27,6 +23,7 @@ DISTANCE_THRESHOLD = 0.4
 INITIALIZATION_DELAY = 4
 HIT_COUNTER_MAX = 30
 POINTWISE_HIT_COUNTER_MAX = 10
+
 
 # Wrapper implementation for OpenPose detector
 class OpenposeDetector:
@@ -60,13 +57,10 @@ class OpenposeDetector:
 
 
 if __name__ == "__main__":
-
     # CLI configuration
     parser = argparse.ArgumentParser(description="Track human poses in a video.")
     parser.add_argument("files", type=str, nargs="+", help="Video files to process")
-    parser.add_argument(
-        "--skip-frame", dest="skip_frame", type=int, default=1, help="Frame skip period"
-    )
+    parser.add_argument("--skip-frame", dest="skip_frame", type=int, default=1, help="Frame skip period")
     parser.add_argument(
         "--select-gpu",
         dest="select_gpu",
@@ -112,14 +106,10 @@ if __name__ == "__main__":
                     if not detected_poses.any()
                     else [
                         Detection(p, scores=s)
-                        for (p, s) in zip(
-                            detected_poses[:, :, :2], detected_poses[:, :, 2]
-                        )
+                        for (p, s) in zip(detected_poses[:, :, :2], detected_poses[:, :, 2], strict=False)
                     ]
                 )
-                tracked_objects = tracker.update(
-                    detections=detections, period=args.skip_frame
-                )
+                tracked_objects = tracker.update(detections=detections, period=args.skip_frame)
                 norfair.draw_points(frame, detections)
             else:
                 tracked_objects = tracker.update(period=args.skip_frame)

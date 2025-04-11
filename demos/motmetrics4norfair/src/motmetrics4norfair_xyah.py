@@ -70,9 +70,7 @@ if args.make_video:
 if args.select_sequences is None:
     sequences_paths = [f.path for f in os.scandir(args.dataset_path) if f.is_dir()]
 else:
-    sequences_paths = [
-        os.path.join(args.dataset_path, f) for f in args.select_sequences
-    ]
+    sequences_paths = [os.path.join(args.dataset_path, f) for f in args.select_sequences]
 
 accumulator = metrics.Accumulators()
 
@@ -121,9 +119,7 @@ for input_path in sequences_paths:
     seqinfo_path = os.path.join(input_path, "seqinfo.ini")
     info_file = metrics.InformationFile(file_path=seqinfo_path)
 
-    all_detections = metrics.DetectionFileParser(
-        input_path=input_path, information_file=info_file
-    )
+    all_detections = metrics.DetectionFileParser(input_path=input_path, information_file=info_file)
 
     if args.save_pred:
         predictions_text_file = metrics.PredictionsTextFile(
@@ -131,9 +127,7 @@ for input_path in sequences_paths:
         )
 
     if args.make_video:
-        video_file = video.VideoFromFrames(
-            input_path=input_path, save_path=output_path, information_file=info_file
-        )
+        video_file = video.VideoFromFrames(input_path=input_path, save_path=output_path, information_file=info_file)
 
     tracker = Tracker(
         distance_function=iou_xyah,
@@ -148,7 +142,6 @@ for input_path in sequences_paths:
     accumulator.create_accumulator(input_path=input_path, information_file=info_file)
 
     for frame_number, detections in enumerate(all_detections):
-
         # convert detections to ByteTrack format: (center_x, center_y, asp_ratio, height)
         xyah_detections = []
         for det in detections:
@@ -159,15 +152,13 @@ for input_path in sequences_paths:
             xyah_detections.append(Detection(xyah_state_det, scores=det.scores))
 
         if frame_number % frame_skip_period == 0:
-            tracked_objects = tracker.update(
-                detections=xyah_detections, period=frame_skip_period
-            )
+            tracked_objects = tracker.update(detections=xyah_detections, period=frame_skip_period)
         else:
             detections = []
             tracked_objects = tracker.update()
 
         x1y1x2y2_tracked_objects = []
-        for n, obj in enumerate(tracked_objects):
+        for _n, obj in enumerate(tracked_objects):
             half_height = obj.estimate[1, 1] / 2
             half_width = obj.estimate[1, 0] * half_height
             half_size = np.array([half_width, half_height])
@@ -187,9 +178,7 @@ for input_path in sequences_paths:
         if args.make_video:
             frame = next(video_file)
             frame = drawing.draw_boxes(frame, detections=detections)
-            frame = drawing.draw_tracked_boxes(
-                frame=frame, objects=x1y1x2y2_tracked_objects
-            )
+            frame = drawing.draw_tracked_boxes(frame=frame, objects=x1y1x2y2_tracked_objects)
             video_file.update(frame=frame)
 
         # Update output text file

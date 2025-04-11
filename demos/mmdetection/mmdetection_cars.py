@@ -1,4 +1,3 @@
-import numpy as np
 from mmdet.apis import inference_detector, init_detector
 from mmdet.core import get_classes
 
@@ -13,20 +12,14 @@ CHECKPOINT_FILE = "checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth
 model = init_detector(CONFIG_FILE, CHECKPOINT_FILE, device="cuda:0")
 
 # Get the classes id mmdet uses
-VEHICLE_CLASSES = [
-    i
-    for i, n in enumerate(get_classes("coco"))
-    if n in ["car", "motorcycle", "bus", "truck"]
-]
+VEHICLE_CLASSES = [i for i, n in enumerate(get_classes("coco")) if n in ["car", "motorcycle", "bus", "truck"]]
 
 #
 # Norfair
 #
 
 
-tracker = Tracker(
-    distance_function="euclidean", distance_threshold=20, detection_threshold=0.6
-)
+tracker = Tracker(distance_function="euclidean", distance_threshold=20, detection_threshold=0.6)
 
 
 video = Video(input_path="./video.mp4")

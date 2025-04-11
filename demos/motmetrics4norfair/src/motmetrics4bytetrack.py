@@ -63,9 +63,7 @@ if args.make_video:
 if args.select_sequences is None:
     sequences_paths = [f.path for f in os.scandir(args.dataset_path) if f.is_dir()]
 else:
-    sequences_paths = [
-        os.path.join(args.dataset_path, f) for f in args.select_sequences
-    ]
+    sequences_paths = [os.path.join(args.dataset_path, f) for f in args.select_sequences]
 
 accumulator = metrics.Accumulators()
 
@@ -82,9 +80,7 @@ for input_path in sequences_paths:
     seqinfo_path = os.path.join(input_path, "seqinfo.ini")
     info_file = metrics.InformationFile(file_path=seqinfo_path)
 
-    all_detections = metrics.DetectionFileParser(
-        input_path=input_path, information_file=info_file
-    )
+    all_detections = metrics.DetectionFileParser(input_path=input_path, information_file=info_file)
 
     if args.save_pred:
         predictions_text_file = metrics.PredictionsTextFile(
@@ -92,9 +88,7 @@ for input_path in sequences_paths:
         )
 
     if args.make_video:
-        video_file = video.VideoFromFrames(
-            input_path=input_path, save_path=output_path, information_file=info_file
-        )
+        video_file = video.VideoFromFrames(input_path=input_path, save_path=output_path, information_file=info_file)
 
     class ArgsByte:
         def __init__(self, track_thresh=0.5, track_buffer=30, match_thresh=0.8):
@@ -112,24 +106,19 @@ for input_path in sequences_paths:
     img_size = [info_file.search("imHeight"), info_file.search("imWidth")]
 
     byte_tracked_objects = []
-    for frame_number, detections in enumerate(all_detections):
-
+    for _frame_number, detections in enumerate(all_detections):
         byte_detections = []
         for det in detections:
             byte_det = np.append(det.points.reshape((1, -1)), det.scores[0])
             byte_detections.append(byte_det)
 
         if len(byte_detections) > 0:
-            byte_tracked_objects = tracker.update(
-                np.array(byte_detections), img_size, tuple(img_size)
-            )
+            byte_tracked_objects = tracker.update(np.array(byte_detections), img_size, tuple(img_size))
 
         tracked_objects = []
         for obj in byte_tracked_objects:
             box = obj.tlbr.reshape((2, 2))
-            tracked_objects.append(
-                PartialStaticTracker(box, obj.track_id, np.array([True]))
-            )
+            tracked_objects.append(PartialStaticTracker(box, obj.track_id, np.array([True])))
 
         # Draw detection and tracked object boxes on frame
         if args.make_video:

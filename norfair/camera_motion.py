@@ -1,4 +1,5 @@
 "Camera motion stimation module."
+
 import copy
 from abc import ABC, abstractmethod
 from logging import warning
@@ -46,9 +47,7 @@ class TransformationGetter(ABC):
     """
 
     @abstractmethod
-    def __call__(
-        self, curr_pts: np.ndarray, prev_pts: np.ndarray
-    ) -> Tuple[bool, CoordinatesTransformation]:
+    def __call__(self, curr_pts: np.ndarray, prev_pts: np.ndarray) -> Tuple[bool, CoordinatesTransformation]:
         pass
 
 
@@ -94,16 +93,12 @@ class TranslationTransformationGetter(TransformationGetter):
         Proportion of points that must be matched, otherwise the reference frame must be updated.
     """
 
-    def __init__(
-        self, bin_size: float = 0.2, proportion_points_used_threshold: float = 0.9
-    ) -> None:
+    def __init__(self, bin_size: float = 0.2, proportion_points_used_threshold: float = 0.9) -> None:
         self.bin_size = bin_size
         self.proportion_points_used_threshold = proportion_points_used_threshold
         self.data = None
 
-    def __call__(
-        self, curr_pts: np.ndarray, prev_pts: np.ndarray
-    ) -> Tuple[bool, TranslationTransformation]:
+    def __call__(self, curr_pts: np.ndarray, prev_pts: np.ndarray) -> Tuple[bool, TranslationTransformation]:
         # get flow
         flow = curr_pts - prev_pts
 
@@ -213,20 +208,14 @@ class HomographyTransformationGetter(TransformationGetter):
         self.confidence = confidence
         self.proportion_points_used_threshold = proportion_points_used_threshold
 
-    def __call__(
-        self, curr_pts: np.ndarray, prev_pts: np.ndarray
-    ) -> Tuple[bool, Optional[HomographyTransformation]]:
-
+    def __call__(self, curr_pts: np.ndarray, prev_pts: np.ndarray) -> Tuple[bool, Optional[HomographyTransformation]]:
         if not (
             isinstance(prev_pts, np.ndarray)
             and prev_pts.shape[0] >= 4
             and isinstance(curr_pts, np.ndarray)
             and curr_pts.shape[0] >= 4
         ):
-            warning(
-                "The homography couldn't be computed in this frame "
-                "due to low amount of points"
-            )
+            warning("The homography couldn't be computed in this frame " "due to low amount of points")
             if isinstance(self.data, np.ndarray):
                 return True, HomographyTransformation(self.data)
             else:
@@ -281,9 +270,7 @@ def _get_sparse_flow(
         )
 
     # compute optical flow
-    curr_pts, status, err = cv2.calcOpticalFlowPyrLK(
-        gray_prvs, gray_next, prev_pts, None
-    )
+    curr_pts, status, err = cv2.calcOpticalFlowPyrLK(gray_prvs, gray_next, prev_pts, None)
     # filter valid points
     idx = np.where(status == 1)[0]
     prev_pts = prev_pts[idx].reshape((-1, 2))
@@ -343,7 +330,6 @@ class MotionEstimator:
         flow_color: Optional[Tuple[int, int, int]] = None,
         quality_level: float = 0.01,
     ):
-
         self.max_points = max_points
         self.min_distance = min_distance
         self.block_size = block_size
@@ -365,9 +351,7 @@ class MotionEstimator:
         self.gray_next = None
         self.quality_level = quality_level
 
-    def update(
-        self, frame: np.ndarray, mask: np.ndarray = None
-    ) -> Optional[CoordinatesTransformation]:
+    def update(self, frame: np.ndarray, mask: np.ndarray = None) -> Optional[CoordinatesTransformation]:
         """
         Estimate camera motion for each frame
 
@@ -411,7 +395,7 @@ class MotionEstimator:
                 quality_level=self.quality_level,
             )
             if self.draw_flow:
-                for (curr, prev) in zip(curr_pts, prev_pts):
+                for curr, prev in zip(curr_pts, prev_pts, strict=False):
                     c = tuple(curr.astype(int).ravel())
                     p = tuple(prev.astype(int).ravel())
                     cv2.line(frame, c, p, self.flow_color, 2)
@@ -421,15 +405,11 @@ class MotionEstimator:
 
         update_prvs, coord_transformations = True, None
         try:
-            update_prvs, coord_transformations = self.transformations_getter(
-                curr_pts, prev_pts
-            )
+            update_prvs, coord_transformations = self.transformations_getter(curr_pts, prev_pts)
         except Exception as e:
             warning(e)
             del self.transformations_getter
-            self.transformations_getter = copy.deepcopy(
-                self.transformations_getter_copy
-            )
+            self.transformations_getter = copy.deepcopy(self.transformations_getter_copy)
 
         if update_prvs:
             self.gray_prvs = self.gray_next

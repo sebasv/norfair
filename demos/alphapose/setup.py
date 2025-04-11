@@ -55,8 +55,8 @@ def get_hash():
             from alphapose.version import __version__
 
             sha = __version__.split("+")[-1]
-        except ImportError:
-            raise ImportError("Unable to get git version")
+        except ImportError as e:
+            raise ImportError("Unable to get git version") from e
     else:
         sha = "unknown"
 
@@ -100,7 +100,6 @@ def make_cython_ext(name, module, sources):
 
 
 def make_cuda_ext(name, module, sources):
-
     return CUDAExtension(
         name="{}.{}".format(module, name),
         sources=[os.path.join(*module.split("."), p) for p in sources],
@@ -128,9 +127,7 @@ def get_ext_modules():
                 module="detector.nms",
                 sources=["src/soft_nms_cpu.pyx"],
             ),
-            make_cuda_ext(
-                name="nms_cpu", module="detector.nms", sources=["src/nms_cpu.cpp"]
-            ),
+            make_cuda_ext(name="nms_cpu", module="detector.nms", sources=["src/nms_cpu.cpp"]),
             make_cuda_ext(
                 name="nms_cuda",
                 module="detector.nms",

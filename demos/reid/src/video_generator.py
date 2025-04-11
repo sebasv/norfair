@@ -25,7 +25,6 @@ SOFTWARE.
 
 """
 
-
 import math
 import random
 
@@ -49,7 +48,6 @@ class Actor:
         det_err_sigma: float = 1.0,
         canvas_size: int = 400,
     ):
-
         self.max_omega = max_omega
         self.miss_prob = miss_prob
         self.det_err_sigma = det_err_sigma
@@ -126,7 +124,6 @@ def data_generator(
     miss_prob: float = 0.1,
     det_err_sigma: float = 1.0,
 ):
-
     actors = [
         Actor(
             max_omega=max_omega,
@@ -173,9 +170,7 @@ def generate_video(
         img = np.ones(canvas_size, dtype=np.uint8) * 30
         return img
 
-    video = cv2.VideoWriter(
-        output_path, cv2.VideoWriter_fourcc(*"DIVX"), fps, (canvas_size, canvas_size)
-    )
+    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*"DIVX"), fps, (canvas_size, canvas_size))
 
     detections_gt = []
     detections_pred = []
@@ -197,9 +192,7 @@ def generate_video(
             xmax, ymax = det_gt.points[-1]
             feature = det_gt.embedding
             for channel in range(3):
-                img[int(ymin) : int(ymax), int(xmin) : int(xmax), channel] = feature[
-                    channel
-                ]
+                img[int(ymin) : int(ymax), int(xmin) : int(xmax), channel] = feature[channel]
 
         video.write(img)
         detections_gt.append(dets_gt)

@@ -12,14 +12,12 @@ from norfair import (
     Video,
     draw_absolute_grid,
 )
-
 from norfair.camera_motion import (
     HomographyTransformationGetter,
     MotionEstimator,
     TranslationTransformationGetter,
 )
-
-from norfair.drawing import draw_points, draw_boxes
+from norfair.drawing import draw_boxes, draw_points
 
 
 def yolo_detections_to_norfair_detections(yolo_detections, track_boxes):
@@ -42,9 +40,7 @@ def yolo_detections_to_norfair_detections(yolo_detections, track_boxes):
             points = bbox.mean(axis=0, keepdims=True)
             scores = detection_as_xyxy[[4]]
 
-        norfair_detections.append(
-            Detection(points=points, scores=scores, label=detection_as_xyxy[-1].item())
-        )
+        norfair_detections.append(Detection(points=points, scores=scores, label=detection_as_xyxy[-1].item()))
 
     return norfair_detections, boxes
 
@@ -88,15 +84,9 @@ def run():
         default=30,
         help="Max iteration the tracked object is kept after when there are no detections",
     )
-    parser.add_argument(
-        "--iou-threshold", type=float, help="Iou threshold for detector", default=0.15
-    )
-    parser.add_argument(
-        "--image-size", type=int, help="Size of the images for detector", default=480
-    )
-    parser.add_argument(
-        "--classes", type=int, nargs="+", default=[0], help="Classes to track"
-    )
+    parser.add_argument("--iou-threshold", type=float, help="Iou threshold for detector", default=0.15)
+    parser.add_argument("--image-size", type=int, help="Size of the images for detector", default=480)
+    parser.add_argument("--classes", type=int, nargs="+", default=[0], help="Classes to track")
     parser.add_argument(
         "--transformation",
         default="homography",
@@ -218,11 +208,7 @@ def run():
             path_drawer = AbsolutePaths(max_history=args.path_history, thickness=2)
 
         video = Video(input_path=input_path)
-        show_or_write = (
-            video.write
-            if args.save
-            else partial(video.show, downsample_ratio=args.downsample_ratio)
-        )
+        show_or_write = video.write if args.save else partial(video.show, downsample_ratio=args.downsample_ratio)
 
         distance_threshold = args.distance_threshold
         if args.track_boxes:
@@ -245,9 +231,7 @@ def run():
         )
         for frame in video:
             detections = model(frame)
-            detections, boxes = yolo_detections_to_norfair_detections(
-                detections, args.track_boxes
-            )
+            detections, boxes = yolo_detections_to_norfair_detections(detections, args.track_boxes)
 
             mask = None
             if args.mask_detections:
@@ -267,27 +251,21 @@ def run():
             else:
                 coord_transformations = motion_estimator.update(frame, mask)
 
-            tracked_objects = tracker.update(
-                detections=detections, coord_transformations=coord_transformations
-            )
+            tracked_objects = tracker.update(detections=detections, coord_transformations=coord_transformations)
 
             if args.draw_objects:
                 drawing_function(
                     frame,
                     tracked_objects,
                     text_size=args.id_size,
-                    text_thickness=None
-                    if args.id_size is None
-                    else int(args.id_size * 2),
+                    text_thickness=None if args.id_size is None else int(args.id_size * 2),
                 )
 
             if args.absolute_grid:
                 draw_absolute_grid(frame, coord_transformations)
 
             if args.draw_paths:
-                frame = path_drawer.draw(
-                    frame, tracked_objects, coord_transform=coord_transformations
-                )
+                frame = path_drawer.draw(frame, tracked_objects, coord_transform=coord_transformations)
 
             if use_fixed_camera:
                 frame = fixed_camera.adjust_frame(frame, coord_transformations)
